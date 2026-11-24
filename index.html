@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ru" class="lock">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Wortschatz">
+<title>Wortschatz</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF0F3;--ink:#16202B;--muted:#5B6877;--front:#1D3557;--front-ink:#F5F7FA;--back:#F4C95D;--back-ink:#1B1B1B;--panel:#FFFFFF;--line:#D3D9E0;--accent:#1D3557;--accent-ink:#fff;--danger:#B3261E;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161B;--ink:#E8ECF1;--muted:#98A4B3;--front:#2B4C7E;--front-ink:#fff;--back:#E9BE4E;--panel:#1B2128;--line:#2C343D;--accent:#8FB4E8;--accent-ink:#0f1720;--danger:#F2A09A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161B;--ink:#E8ECF1;--muted:#98A4B3;--front:#2B4C7E;--front-ink:#fff;--back:#E9BE4E;--panel:#1B2128;--line:#2C343D;--accent:#8FB4E8;--accent-ink:#0f1720;--danger:#F2A09A;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+h1{font-size:1.5rem;font-weight:800;margin:0;letter-spacing:-.01em}
+.tabs{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:8px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.count{text-align:center;color:var(--muted);margin:0 0 12px;font-weight:600}
+.scene{perspective:1200px;touch-action:pan-y}
+.card{position:relative;width:100%;aspect-ratio:4/3;border:0;padding:0;background:none;cursor:pointer;font:inherit;transform-style:preserve-3d;transition:transform .45s ease;display:block}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;border-radius:20px;backface-visibility:hidden;-webkit-backface-visibility:hidden;font-size:clamp(1.8rem,8vw,2.6rem);font-weight:800;word-break:break-word;line-height:1.15}
+.front{background:var(--front);color:var(--front-ink)}
+.back{background:var(--back);color:var(--back-ink);transform:rotateY(180deg)}
+.hint{text-align:center;color:var(--muted);font-size:.9rem;margin:12px 0 0}
+.controls{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-weight:600;padding:14px 10px;border-radius:14px;cursor:pointer;font-size:1rem}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.empty{text-align:center;color:var(--muted);padding:48px 12px;line-height:1.5}
+.add{display:grid;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:20px}
+.add label{display:grid;gap:4px;font-size:.9rem;font-weight:600;color:var(--muted)}
+.add input{font:inherit;font-size:1rem;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.list li{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.list .w{flex:1;min-width:0;word-break:break-word}
+.list .w b{display:block}
+.list .w span{color:var(--muted)}
+.del{border:0;background:none;color:var(--danger);font:inherit;font-weight:600;cursor:pointer;padding:8px}
+.total{color:var(--muted);font-weight:600;margin:0 0 10px}
+.backup{display:grid;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:20px}
+.backup h2{font-size:1rem;margin:0}
+.backup .row{display:flex;gap:10px}
+.status{margin:0;color:var(--muted);font-size:.9rem;min-height:1.2em}
+@media (min-height:560px){html.lock,html.lock body{overflow:hidden;height:100%;overscroll-behavior:none}html.lock body{touch-action:none}}
+.btn:disabled{opacity:.5;cursor:default}
+.list li{flex-wrap:wrap}
+.list .w{flex:1 1 100%}
+.list li.done .w{opacity:.55}
+.list li.done .w b::after{content:" ✓";color:var(--accent)}
+.acts{display:flex;gap:4px;flex-wrap:wrap}
+.act{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:8px 10px 8px 0}
+.list li.editing input{flex:1 1 100%;font:inherit;font-size:1rem;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.learn{width:100%;margin-top:10px}
+.hidden{display:none}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Wortschatz</h1>
+    <div class="tabs" role="group" aria-label="Режим">
+      <button id="tabStudy" aria-pressed="true">Учить</button>
+      <button id="tabEdit" aria-pressed="false">Редактор</button>
+    </div>
+  </header>
+
+  <section id="study">
+    <div id="studyEmpty" class="empty hidden">Пока нет карточек. Открой «Редактор» и добавь первое слово.</div>
+    <div id="studyBody">
+      <p class="count" id="count"></p>
+      <div class="scene"><button class="card" id="card" aria-label="Перевернуть карточку"><span class="face front" id="front"></span><span class="face back" id="back"></span></button></div>
+      <p class="hint">Нажми на карточку, чтобы перевернуть. Свайп влево — дальше, вправо — назад.</p>
+      <div class="controls">
+        <button class="btn" id="prev">Назад</button>
+        <button class="btn" id="shuffle">Перемешать</button>
+        <button class="btn primary" id="next">Дальше</button>
+      </div>
+      <button class="btn learn" id="learnBtn">✓ Выучил, больше не показывать</button>
+    </div>
+  </section>
+
+  <section id="edit" class="hidden">
+    <div class="add">
+      <label>Немецкое слово<input id="de" autocomplete="off" lang="de"></label>
+      <label>Перевод на русский<input id="ru" autocomplete="off" lang="ru"></label>
+      <button class="btn primary" id="addBtn">Добавить карточку</button>
+    </div>
+    <div class="backup" id="cloud">
+      <h2>Облако</h2>
+      <p class="status" id="cloudStatus">Подключаюсь…</p>
+      <button class="btn primary" id="signBtn" disabled>Войти через Google</button>
+    </div>
+    <div class="backup">
+      <h2>Резервная копия</h2>
+      <div class="row">
+        <button class="btn" id="exportBtn">Сохранить в файл</button>
+        <button class="btn" id="importBtn">Загрузить из файла</button>
+      </div>
+      <input type="file" id="file" accept=".json,application/json" class="hidden">
+      <p class="status" id="status" role="status"></p>
+      <p class="status" id="persist"></p>
+    </div>
+    <p class="total" id="total"></p>
+    <ul class="list" id="list"></ul>
+  </section>
+</main>
+
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyDB_ijnKg3eM103e3qpu65x9w99FmalgrQ",
+  authDomain: "wortschatz-de-ru.firebaseapp.com",
+  projectId: "wortschatz-de-ru",
+  storageBucket: "wortschatz-de-ru.firebasestorage.app",
+  messagingSenderId: "620129320317",
+  appId: "1:620129320317:web:1e731e8b895b997ecb2014"
+};
+(function(){
+  var KEY = 'wortschatz:v1';
+  var SAMPLE = [
+    {id:'a1', de:'der Apfel', ru:'яблоко'},
+    {id:'a2', de:'die Straße', ru:'улица'},
+    {id:'a3', de:'vergessen', ru:'забывать'}
+  ];
+  var cards = load();
+  var idx = 0;
+  var flipped = false;
+  var cloudPush = function(){};
+  var applyingRemote = false;
+  var DIRTY = 'wortschatz:dirty';
+  var changeSeq = 0, ackedSeq = 0;
+
+  function load(){
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { var p = JSON.parse(raw); if (Array.isArray(p)) return p; }
+    } catch (e) {}
+    return SAMPLE.slice();
+  }
+  function save(){
+    try { localStorage.setItem(KEY, JSON.stringify(cards)); } catch (e) {}
+    if (!applyingRemote) {
+      changeSeq++;
+      try { localStorage.setItem(DIRTY, '1'); } catch (e) {}
+      cloudPush();
+    }
+  }
+  var $ = function(id){ return document.getElementById(id); };
+
+  function pool(){ return cards.filter(function(c){ return !c.learned; }); }
+  function showCard(){
+    var deck = pool(), has = deck.length > 0;
+    $('studyEmpty').classList.toggle('hidden', has);
+    $('studyBody').classList.toggle('hidden', !has);
+    if (!has) {
+      $('studyEmpty').textContent = cards.length
+        ? 'Все слова выучены! Вернуть их в учёбу можно в «Редакторе».'
+        : 'Пока нет карточек. Открой «Редактор» и добавь первое слово.';
+      return;
+    }
+    if (idx >= deck.length) idx = 0;
+    if (idx < 0) idx = deck.length - 1;
+    $('front').textContent = deck[idx].de;
+    $('back').textContent = deck[idx].ru;
+    var learnedN = cards.length - deck.length;
+    $('count').textContent = (idx + 1) + ' из ' + deck.length + (learnedN ? ' · выучено: ' + learnedN : '');
+  }
+  function setFlipped(v){
+    flipped = v;
+    $('card').classList.toggle('flipped', v);
+  }
+  function go(step){
+    if (!pool().length) return;
+    if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) { slide(step); return; }
+    var wasFlipped = flipped;
+    setFlipped(false);
+    var apply = function(){ idx += step; showCard(); };
+    if (wasFlipped) setTimeout(apply, 220); else apply();
+  }
+  var editingId = null;
+  function mkBtn(text, cls, fn){
+    var b = document.createElement('button');
+    b.className = cls; b.textContent = text;
+    b.addEventListener('click', fn);
+    return b;
+  }
+  function renderList(){
+    var ul = $('list');
+    ul.textContent = '';
+    var learnedN = cards.filter(function(c){ return c.learned; }).length;
+    $('total').textContent = 'Всего карточек: ' + cards.length + (learnedN ? ' · выучено: ' + learnedN : '');
+    cards.forEach(function(c){
+      var li = document.createElement('li');
+      if (c.id === editingId) {
+        li.className = 'editing';
+        var f1 = document.createElement('input'); f1.value = c.de; f1.lang = 'de'; f1.setAttribute('aria-label', 'Немецкое слово');
+        var f2 = document.createElement('input'); f2.value = c.ru; f2.lang = 'ru'; f2.setAttribute('aria-label', 'Перевод');
+        var saveEdit = function(){
+          var de = f1.value.trim(), ru = f2.value.trim();
+          if (!de || !ru) { (de ? f2 : f1).focus(); return; }
+          c.de = de; c.ru = ru; editingId = null;
+          save(); renderList(); showCard();
+        };
+        f1.addEventListener('keydown', function(e){ if (e.key === 'Enter') f2.focus(); });
+        f2.addEventListener('keydown', function(e){ if (e.key === 'Enter') saveEdit(); });
+        var ea = document.createElement('div'); ea.className = 'acts';
+        ea.appendChild(mkBtn('Сохранить', 'act', saveEdit));
+        ea.appendChild(mkBtn('Отмена', 'act', function(){ editingId = null; renderList(); }));
+        li.appendChild(f1); li.appendChild(f2); li.appendChild(ea); ul.appendChild(li);
+        f1.focus();
+        return;
+      }
+      if (c.learned) li.className = 'done';
+      var w = document.createElement('div'); w.className = 'w';
+      var b = document.createElement('b'); b.textContent = c.de;
+      var s = document.createElement('span'); s.textContent = c.ru;
+      w.appendChild(b); w.appendChild(s);
+      var acts = document.createElement('div'); acts.className = 'acts';
+      acts.appendChild(mkBtn('Изменить', 'act', function(){ editingId = c.id; renderList(); }));
+      acts.appendChild(mkBtn(c.learned ? 'Вернуть в учёбу' : 'Выучено', 'act', function(){
+        if (c.learned) delete c.learned; else c.learned = true;
+        save(); renderList();
+      }));
+      acts.appendChild(mkBtn('Удалить', 'del', function(){
+        cards = cards.filter(function(x){ return x.id !== c.id; });
+        save(); renderList(); showCard();
+      }));
+      li.appendChild(w); li.appendChild(acts); ul.appendChild(li);
+    });
+  }
+  function setMode(edit){
+    $('study').classList.toggle('hidden', edit);
+    $('edit').classList.toggle('hidden', !edit);
+    document.documentElement.classList.toggle('lock', !edit);
+    $('tabStudy').setAttribute('aria-pressed', String(!edit));
+    $('tabEdit').setAttribute('aria-pressed', String(edit));
+    if (edit) renderList(); else { setFlipped(false); showCard(); }
+  }
+  function add(){
+    var de = $('de').value.trim(), ru = $('ru').value.trim();
+    if (!de || !ru) { (de ? $('ru') : $('de')).focus(); return; }
+    cards.push({id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), de: de, ru: ru});
+    save();
+    $('de').value = ''; $('ru').value = '';
+    renderList(); $('de').focus();
+  }
+
+  var sx = 0, sy = 0, tracking = false, swiped = false, dragging = false, decided = false, busy = false;
+  var scene = document.querySelector('.scene');
+  var EASE_BACK = 'transform .22s ease-out, opacity .22s ease-out';
+  function slide(dir){
+    if (busy) return;
+    busy = true;
+    var w = window.innerWidth, card = $('card');
+    scene.style.transition = 'transform .18s ease-in, opacity .18s ease-in';
+    scene.style.transform = 'translateX(' + (-dir * w) + 'px) rotate(' + (-dir * 8) + 'deg)';
+    scene.style.opacity = '0';
+    setTimeout(function(){
+      card.style.transition = 'none';
+      setFlipped(false);
+      idx += dir;
+      showCard();
+      scene.style.transition = 'none';
+      scene.style.transform = 'translateX(' + (dir * w * 0.5) + 'px)';
+      void scene.offsetWidth;
+      card.style.transition = '';
+      scene.style.transition = EASE_BACK;
+      scene.style.transform = '';
+      scene.style.opacity = '';
+      setTimeout(function(){ scene.style.transition = ''; busy = false; }, 240);
+    }, 190);
+  }
+  function springBack(){
+    scene.style.transition = EASE_BACK;
+    scene.style.transform = '';
+    scene.style.opacity = '';
+  }
+  scene.addEventListener('touchstart', function(e){
+    if (busy) return;
+    var t = e.changedTouches[0];
+    sx = t.clientX; sy = t.clientY; tracking = true; swiped = false; dragging = false; decided = false;
+  }, {passive: true});
+  scene.addEventListener('touchmove', function(e){
+    if (!tracking || busy) return;
+    var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (!decided) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      decided = true;
+      if (Math.abs(dx) > Math.abs(dy)) { dragging = true; swiped = true; scene.style.transition = 'none'; }
+    }
+    if (dragging) {
+      scene.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx * 0.03) + 'deg)';
+      scene.style.opacity = String(1 - Math.min(Math.abs(dx) / (window.innerWidth * 1.2), 0.5));
+    }
+  }, {passive: true});
+  scene.addEventListener('touchend', function(e){
+    if (!tracking) return;
+    tracking = false;
+    if (swiped) setTimeout(function(){ swiped = false; }, 350);
+    if (!dragging) return;
+    dragging = false;
+    var dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) > Math.min(110, window.innerWidth * 0.25)) slide(dx < 0 ? 1 : -1);
+    else springBack();
+  }, {passive: true});
+  scene.addEventListener('touchcancel', function(){
+    tracking = false;
+    if (dragging) { dragging = false; springBack(); }
+  }, {passive: true});
+  $('card').addEventListener('click', function(){
+    if (swiped) return;
+    setFlipped(!flipped);
+  });
+  $('next').addEventListener('click', function(){ go(1); });
+  $('learnBtn').addEventListener('click', function(){
+    if (busy) return;
+    var deck = pool();
+    if (!deck.length) return;
+    if (idx >= deck.length) idx = 0;
+    deck[idx].learned = true;
+    save();
+    setFlipped(false);
+    if (!pool().length) { showCard(); return; }
+    idx -= 1;
+    go(1);
+  });
+  $('prev').addEventListener('click', function(){ go(-1); });
+  $('shuffle').addEventListener('click', function(){
+    setFlipped(false);
+    for (var i = cards.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = cards[i]; cards[i] = cards[j]; cards[j] = t;
+    }
+    idx = 0; save(); showCard();
+  });
+  $('tabStudy').addEventListener('click', function(){ setMode(false); });
+  $('tabEdit').addEventListener('click', function(){ setMode(true); });
+  $('addBtn').addEventListener('click', add);
+  $('ru').addEventListener('keydown', function(e){ if (e.key === 'Enter') add(); });
+  $('de').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('ru').focus(); });
+  document.addEventListener('keydown', function(e){
+    if ($('study').classList.contains('hidden')) return;
+    if (e.key === 'ArrowRight') go(1);
+    else if (e.key === 'ArrowLeft') go(-1);
+  });
+
+  function say(t){ $('status').textContent = t; }
+  function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function key(de, ru){ return JSON.stringify([de, ru]); }
+
+  $('exportBtn').addEventListener('click', function(){
+    if (!cards.length) { say('Список пуст, сохранять нечего.'); return; }
+    var data = JSON.stringify(cards.map(function(c){ return {de: c.de, ru: c.ru, learned: !!c.learned}; }), null, 2);
+    var url = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+    var a = document.createElement('a');
+    a.href = url; a.download = 'wortschatz-slova.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    say('Файл сохранён. Карточек: ' + cards.length + '.');
+  });
+  $('importBtn').addEventListener('click', function(){ $('file').click(); });
+  $('file').addEventListener('change', function(){
+    var input = this, f = input.files && input.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function(){
+      try {
+        var arr = JSON.parse(r.result);
+        if (!Array.isArray(arr)) throw new Error('format');
+        var seen = {};
+        cards.forEach(function(c){ seen[key(c.de, c.ru)] = 1; });
+        var added = 0, skipped = 0;
+        arr.forEach(function(x){
+          if (!x || typeof x.de !== 'string' || typeof x.ru !== 'string') return;
+          var de = x.de.trim(), ru = x.ru.trim();
+          if (!de || !ru) return;
+          var k = key(de, ru);
+          if (seen[k]) { skipped++; return; }
+          seen[k] = 1; var nc = {id: newId(), de: de, ru: ru}; if (x.learned === true) nc.learned = true; cards.push(nc); added++;
+        });
+        save(); renderList(); showCard();
+        say('Добавлено карточек: ' + added + (skipped ? '. Повторов пропущено: ' + skipped : '') + '.');
+      } catch (e) {
+        say('Не удалось прочитать файл. Нужен файл, сохранённый кнопкой «Сохранить в файл».');
+      }
+      input.value = '';
+    };
+    r.onerror = function(){ say('Не удалось открыть файл.'); input.value = ''; };
+    r.readAsText(f);
+  });
+
+  function checkPersist(){
+    var el = $('persist');
+    try {
+      if (!(navigator.storage && navigator.storage.persist && navigator.storage.persisted)) {
+        el.textContent = 'Этот браузер не умеет защищать хранилище. Делай резервную копию.';
+        return;
+      }
+      navigator.storage.persisted().then(function(p){
+        return p ? p : navigator.storage.persist();
+      }).then(function(p){
+        el.textContent = p
+          ? 'Хранилище защищено: браузер не будет стирать слова сам при нехватке места.'
+          : 'Браузер не гарантирует сохранность слов. Делай резервную копию.';
+      }).catch(function(){});
+    } catch (e) {}
+  }
+  // ---------- Облако (Firebase) ----------
+  var fb = null, fbUser = null, unsub = null, pushTimer = null, firstSnap = true;
+  function cloudSay(t){ $('cloudStatus').textContent = t; }
+  function cleanCards(arr){
+    var out = [];
+    (arr || []).forEach(function(x){
+      if (!x || typeof x.de !== 'string' || typeof x.ru !== 'string') return;
+      var de = x.de.trim(), ru = x.ru.trim();
+      if (!de || !ru) return;
+      var o = {id: typeof x.id === 'string' && x.id ? x.id : newId(), de: de, ru: ru};
+      if (x.learned === true) o.learned = true;
+      out.push(o);
+    });
+    return out;
+  }
+  function applyRemote(list){
+    applyingRemote = true;
+    cards = cleanCards(list);
+    save();
+    applyingRemote = false;
+    if (idx >= cards.length) idx = 0;
+    renderList(); showCard();
+  }
+  function writeCloud(ref){
+    var seq = changeSeq;
+    var data = {cards: cards.map(function(c){ return {id: c.id, de: c.de, ru: c.ru, learned: !!c.learned}; }), updated: Date.now()};
+    return fb.fs.setDoc(ref, data).then(function(){
+      ackedSeq = seq;
+      if (seq === changeSeq) { try { localStorage.removeItem(DIRTY); } catch (e) {} }
+      if (fbUser) cloudSay('Синхронизировано: ' + cards.length + ' карт. Аккаунт: ' + fbUser.email);
+    }).catch(function(e){
+      cloudSay('Не удалось сохранить в облако (' + (e && e.code ? e.code : 'ошибка') + '). Слова сохранены на устройстве.');
+    });
+  }
+  function onUser(u){
+    fbUser = u;
+    if (unsub) { unsub(); unsub = null; }
+    clearTimeout(pushTimer);
+    if (!u) {
+      cloudPush = function(){};
+      $('signBtn').textContent = 'Войти через Google';
+      cloudSay('Не подключено. Слова хранятся только на этом устройстве.');
+      return;
+    }
+    $('signBtn').textContent = 'Выйти';
+    cloudSay('Вход выполнен: ' + u.email + '. Синхронизирую…');
+    var ref = fb.fs.doc(fb.db, 'users', u.uid);
+    var SYNCED = 'wortschatz:synced:' + u.uid;
+    firstSnap = true;
+    cloudPush = function(){
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(function(){ writeCloud(ref); }, 600);
+    };
+    unsub = fb.fs.onSnapshot(ref, function(snap){
+      if (snap.metadata.hasPendingWrites) return;
+      var remote = (snap.exists() && Array.isArray(snap.data().cards)) ? cleanCards(snap.data().cards) : null;
+      if (firstSnap) {
+        firstSnap = false;
+        var synced = false, dirty = false;
+        try { synced = !!localStorage.getItem(SYNCED); dirty = !!localStorage.getItem(DIRTY); } catch (e) {}
+        if (!synced) {
+          var seen = {}, merged = remote ? remote.slice() : [];
+          merged.forEach(function(c){ seen[key(c.de, c.ru)] = 1; });
+          cards.forEach(function(c){ if (!seen[key(c.de, c.ru)]) merged.push(c); });
+          applyRemote(merged);
+          writeCloud(ref).then(function(){ try { localStorage.setItem(SYNCED, '1'); } catch (e) {} });
+        } else if (dirty || !remote) {
+          writeCloud(ref);
+        } else {
+          applyRemote(remote);
+          cloudSay('Синхронизировано: ' + cards.length + ' карт. Аккаунт: ' + u.email);
+        }
+        return;
+      }
+      if (changeSeq !== ackedSeq || !remote) return;
+      applyRemote(remote);
+      cloudSay('Обновлено из облака: ' + cards.length + ' карт. Аккаунт: ' + u.email);
+    }, function(err){
+      var code = err && err.code ? err.code : 'ошибка';
+      cloudSay(code === 'permission-denied'
+        ? 'Нет доступа к базе. Проверь правила Firestore и почту в них.'
+        : 'Ошибка облака: ' + code);
+    });
+  }
+  function initCloud(){
+    var base = 'https://www.gstatic.com/firebasejs/10.14.1/';
+    return Promise.all([
+      import(base + 'firebase-app.js'),
+      import(base + 'firebase-auth.js'),
+      import(base + 'firebase-firestore.js')
+    ]).then(function(m){
+      fb = {app: m[0], auth: m[1], fs: m[2]};
+      var app = fb.app.initializeApp(firebaseConfig);
+      fb.a = fb.auth.getAuth(app);
+      fb.db = fb.fs.getFirestore(app);
+      fb.auth.getRedirectResult(fb.a).catch(function(e){
+        if (e && e.code) cloudSay('Не удалось войти: ' + e.code);
+      });
+      fb.auth.onAuthStateChanged(fb.a, onUser);
+      $('signBtn').disabled = false;
+    }).catch(function(){
+      cloudSay('Облако недоступно (нет интернета?). Слова сохраняются на этом устройстве.');
+    });
+  }
+  $('signBtn').addEventListener('click', function(){
+    if (!fb) return;
+    if (fbUser) { fb.auth.signOut(fb.a); return; }
+    var provider = new fb.auth.GoogleAuthProvider();
+    fb.auth.signInWithPopup(fb.a, provider).catch(function(e){
+      var c = e && e.code;
+      if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment') {
+        fb.auth.signInWithRedirect(fb.a, provider);
+      } else if (c !== 'auth/popup-closed-by-user' && c !== 'auth/cancelled-popup-request') {
+        cloudSay('Не удалось войти: ' + (c || 'ошибка'));
+      }
+    });
+  });
+  initCloud();
+
+  checkPersist();
+
+  showCard();
+})();
+</script>
+</body>
+</html>
